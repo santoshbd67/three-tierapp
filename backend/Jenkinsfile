@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'us-east-1'
+        ECR_REPO = '3tier-backend'
+        DOCKER_IMAGE_NAME = '3tierbackend'
+        DOCKERFILE_PATH = 'backend/Dockerfile'
+    }
+
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+                        def customImage = docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}", "-f ${DOCKERFILE_PATH} .")
+                    }
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    // Authenticate with ECR using AWS CLI
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+                    // Tag the Docker image for ECR
+                    docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}").tag("${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${env.BUILD_NUMBER}")
+
+                    // Push the Docker image to ECR
+                    docker.image("${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${env.BUILD_NUMBER}").push()
+                }
+            }
+        }
+       stage('deploy to k8s') {
+            steps {
+                script {
+                    sh "kubectl create namespace workshop"
+                    sh "kubectl appy -f k8s_manifest backend-deployment.yaml"
+                    sh "kubectl appy -f k8s_manifest backend-service.yaml"
+                  }
+            }
+    }
+}
