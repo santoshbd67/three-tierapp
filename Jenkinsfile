@@ -5,7 +5,7 @@ pipeline {
     stages {
 stage('Checkout') {
             steps {
-                git 'https://github.com/your/repository.git'
+                git 'https://github.com/santoshbd67/TWSThreeTierAppChallenge.git'
             }
         stage('Build Docker Image') {
             steps {
