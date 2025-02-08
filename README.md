@@ -56,8 +56,8 @@ eksctl version
 
 ### Step 7: Setup EKS Cluster
 ``` shell
-eksctl create cluster --name three-tier-cluster --region us-west-2 --node-type t2.medium --nodes-min 2 --nodes-max 2
-aws eks update-kubeconfig --region us-west-2 --name three-tier-cluster
+eksctl create cluster --name three-tier-cluster --region us-east-1 --node-type t2.medium --nodes-min 2 --nodes-max 2
+aws eks update-kubeconfig --region us-east-1 --name three-tier-cluster
 kubectl get nodes
 ```
 
